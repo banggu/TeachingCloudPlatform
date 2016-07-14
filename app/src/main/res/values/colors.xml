@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary_blue">#10A0EA</color>
+    <color name="warning_red">#F37B1D</color>
+    <color name="success_green">#5EB95E</color>
+    <color name="swipe_scheme_color">#0F88EB</color>
+    <color name="swipe_bg_color">#F7FAFC</color>
+    <color name="marker_bg">#787D82</color>
+</resources>
