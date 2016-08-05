@@ -9,11 +9,14 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
+import com.baidu.location.BDNotifyListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.SDKInitializer;
@@ -34,20 +37,23 @@ import com.baidu.mapapi.model.LatLng;
 import com.scnu.bangzhu.teachingcloudplatform.MyApplication;
 import com.scnu.bangzhu.teachingcloudplatform.R;
 import com.scnu.bangzhu.teachingcloudplatform.listener.MyOrientationListener;
+import com.scnu.bangzhu.teachingcloudplatform.util.DistanceUtil;
 
 import java.util.List;
 
 /**
  * Created by bangzhu on 2016/6/12.
  */
-public class BaiduMapActivity extends Activity {
+public class BaiduMapActivity extends Activity implements View.OnClickListener{
     private MapView mMapView = null;
     private BaiduMap mBaiduMap = null;
+    private Button mstartSign;
     private LocationClient mLocationClient;
     private MyLocationListener myLocationListener;
+    private NotifyLister mNotifyer;
     private boolean isFirstLoc = true;
-    private double mLatitude;
     private double mLongitude;
+    private double mLatitude;
     //自定义定位图标
     private BitmapDescriptor mLocationIcon;
     private MyOrientationListener myOrientationListener;
@@ -55,9 +61,6 @@ public class BaiduMapActivity extends Activity {
     private float mCurrentDirection;
     //模式参数
     private MyLocationConfiguration.LocationMode mLocationMode;
-    //位置描述
-    private String mLocationDescribe="";
-    private int mLocType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,11 +70,13 @@ public class BaiduMapActivity extends Activity {
         initView();
         initLocation();
         addMarker();
+        setListener();
     }
 
     private void initView() {
         mMapView = (MapView) findViewById(R.id.bmapView);
         mBaiduMap = mMapView.getMap();
+        mstartSign = (Button) findViewById(R.id.btn_startSign);
     }
 
     private void initLocation() {
@@ -81,8 +86,12 @@ public class BaiduMapActivity extends Activity {
         mLocationMode = MyLocationConfiguration.LocationMode.NORMAL;
         //初始化地图核心类
         mLocationClient = ((MyApplication)getApplication()).getBdLocationClient();
+        //初始化监听接口
         myLocationListener = new MyLocationListener();
+        mNotifyer = new NotifyLister();
         mLocationClient.registerLocationListener(myLocationListener);
+        mNotifyer.SetNotifyLocation(23.1467,113.3537,30,"bd09ll");
+        mLocationClient.registerNotify(mNotifyer);
         //设置地图参数
         LocationClientOption option = new LocationClientOption();
         //设置坐标系
@@ -113,7 +122,7 @@ public class BaiduMapActivity extends Activity {
                 TextView textView = new TextView(getApplicationContext());
                 textView.setBackgroundColor(R.color.marker_bg);
                 textView.setPadding(30, 20, 30, 50);
-                textView.setText("经度为"+mLatitude+"，纬度为："+mLongitude);
+                textView.setText("经度为" + mLatitude + "，纬度为：" + mLongitude);
 
                 final LatLng ll = new LatLng(mLatitude, mLongitude);
                 Point p = mBaiduMap.getProjection().toScreenLocation(ll);
@@ -125,6 +134,12 @@ public class BaiduMapActivity extends Activity {
             }
         });
     }
+
+    private void setListener() {
+        mstartSign.setOnClickListener(this);
+    }
+
+    //地图监听接口
     class MyLocationListener implements BDLocationListener{
 
         @Override
@@ -144,10 +159,9 @@ public class BaiduMapActivity extends Activity {
                     true, mLocationIcon);
             mBaiduMap.setMyLocationConfigeration(config);
             //更新经纬度
-            mLatitude = bdLocation.getLatitude();
             mLongitude = bdLocation.getLongitude();
-            mLocationDescribe = bdLocation.getLocationDescribe();
-            mLocType = bdLocation.getLocType();
+            mLatitude = bdLocation.getLatitude();
+
             if(isFirstLoc){
                 //获取坐标点
                 LatLng ll = new LatLng(bdLocation.getLatitude(), bdLocation.getLongitude());
@@ -155,6 +169,13 @@ public class BaiduMapActivity extends Activity {
                 mBaiduMap.animateMapStatus(mapUpdate);
                 isFirstLoc = false;
             }
+        }
+    }
+
+    //地图提醒类，用于
+    class NotifyLister extends BDNotifyListener {
+        public void onNotify(BDLocation mlocation, float distance){
+            Toast.makeText(BaiduMapActivity.this, "可以进行签到"+"距离为："+distance, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -195,6 +216,21 @@ public class BaiduMapActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         mMapView.onDestroy();
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch(v.getId()){
+            case R.id.btn_startSign:
+                double distance = DistanceUtil.getDistance(mLongitude, mLatitude, 114.13224, 22.60957);
+                if(distance > 20){
+                    Log.i("HZWING", mLongitude+":"+mLatitude);
+                    Toast.makeText(this, "超出范围，无法签到,"+"距离为："+distance+"米", Toast.LENGTH_LONG).show();
+                }else{
+                    Toast.makeText(this, "可以进行签到,"+"距离为："+distance+"米", Toast.LENGTH_LONG).show();
+                }
+                break;
+        }
     }
 
     @Override
@@ -247,6 +283,7 @@ public class BaiduMapActivity extends Activity {
                 break;
             case 8:
                addOverLays();
+                Toast.makeText(this, mLatitude+"=="+mLongitude, Toast.LENGTH_LONG).show();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -274,4 +311,6 @@ public class BaiduMapActivity extends Activity {
         MapStatusUpdate mapUpdate = MapStatusUpdateFactory.newLatLngZoom(ll, 16);
         mBaiduMap.animateMapStatus(mapUpdate);
     }
+
+
 }

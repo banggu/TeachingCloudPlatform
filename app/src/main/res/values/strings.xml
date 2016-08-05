@@ -10,4 +10,5 @@
     <string name="delete_sign">删除</string>
     <string name="attendance">出勤</string>
     <string name="absence">缺勤</string>
+    <string name="user_current_location">使用当前位置</string>
 </resources>

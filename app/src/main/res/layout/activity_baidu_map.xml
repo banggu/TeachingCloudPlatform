@@ -5,6 +5,16 @@
     <com.baidu.mapapi.map.MapView
         android:id="@+id/bmapView"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:clickable="true" />
+    <Button
+        android:id="@+id/btn_startSign"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="签到"
+        android:textColor="#fff"
+        android:textSize="20sp"
+        android:background="@color/warning_red"
+        android:layout_gravity="center_horizontal"/>
 </LinearLayout>

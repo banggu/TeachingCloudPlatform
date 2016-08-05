@@ -6,4 +6,5 @@
     <color name="swipe_scheme_color">#0F88EB</color>
     <color name="swipe_bg_color">#F7FAFC</color>
     <color name="marker_bg">#787D82</color>
+    <color name="primary_red">#D73F3F</color>
 </resources>

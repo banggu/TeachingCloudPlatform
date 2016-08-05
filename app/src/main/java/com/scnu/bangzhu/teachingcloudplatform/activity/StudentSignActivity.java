@@ -11,14 +11,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
-import android.widget.Toast;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.scnu.bangzhu.qrcodelibrary.activity.CaptureActivity;
 import com.scnu.bangzhu.teachingcloudplatform.R;
 import com.scnu.bangzhu.teachingcloudplatform.adapter.SignManagementAdapter;
@@ -28,8 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class SignActivity extends Activity implements View.OnClickListener,AdapterView.OnItemSelectedListener, SwipeRefreshLayout.OnRefreshListener{
-    private ImageView iv_locationSign, iv_codeSign;
+public class StudentSignActivity extends Activity implements View.OnClickListener,AdapterView.OnItemSelectedListener, SwipeRefreshLayout.OnRefreshListener{
+    private ImageView iv_locationSign, iv_codeSign, iv_startSign;
     private ListView lv_signRecord;
     private Spinner s_signTime, s_signCourse, s_signCondition;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -47,7 +40,7 @@ public class SignActivity extends Activity implements View.OnClickListener,Adapt
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_sign);
+        setContentView(R.layout.activity_student_sign);
         initView();
         setContents();
         setListeners();
@@ -57,6 +50,7 @@ public class SignActivity extends Activity implements View.OnClickListener,Adapt
 
         iv_locationSign  = (ImageView) findViewById(R.id.iv_locationSign);
         iv_codeSign = (ImageView) findViewById(R.id.iv_codeSign);
+        iv_startSign = (ImageView) findViewById(R.id.iv_startSign);
         lv_signRecord = (ListView) findViewById(R.id.lv_signRecord);
         s_signTime = (Spinner) findViewById(R.id.s_signTime);
         s_signCourse = (Spinner) findViewById(R.id.s_signCourse);
@@ -112,18 +106,23 @@ public class SignActivity extends Activity implements View.OnClickListener,Adapt
         swipeRefreshLayout.setOnRefreshListener(this);
         iv_locationSign.setOnClickListener(this);
         iv_codeSign.setOnClickListener(this);
+        iv_startSign.setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
         switch(v.getId()){
             case R.id.iv_locationSign:
-                Intent intent = new Intent(SignActivity.this, BaiduMapActivity.class);
+                Intent intent = new Intent(StudentSignActivity.this, BaiduMapActivity.class);
                 startActivity(intent);
                 break;
             case R.id.iv_codeSign:
-                Intent it = new Intent(SignActivity.this, CaptureActivity.class);
+                Intent it = new Intent(StudentSignActivity.this, CaptureActivity.class);
                 startActivityForResult(it, 0);
+                break;
+            case R.id.iv_startSign:
+                Intent i = new Intent(StudentSignActivity.this, TeacherSignActivity.class);
+                startActivity(i);
                 break;
         }
     }
@@ -134,7 +133,7 @@ public class SignActivity extends Activity implements View.OnClickListener,Adapt
         if(resultCode == RESULT_OK){
             Bundle bundle = data.getExtras();
             String url = bundle.getString("result");
-            Intent intent = new Intent(SignActivity.this, ShowZxingUrlActivity.class);
+            Intent intent = new Intent(StudentSignActivity.this, ShowZxingUrlActivity.class);
             intent.putExtra("url", url);
             startActivity(intent);
         }
