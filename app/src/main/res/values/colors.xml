@@ -7,4 +7,5 @@
     <color name="swipe_bg_color">#F7FAFC</color>
     <color name="marker_bg">#787D82</color>
     <color name="primary_red">#D73F3F</color>
+    <color name="primary_black">#6A6A6A</color>
 </resources>

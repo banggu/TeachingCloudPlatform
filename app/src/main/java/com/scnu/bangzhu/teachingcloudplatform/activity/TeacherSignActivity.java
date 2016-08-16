@@ -1,10 +1,12 @@
 package com.scnu.bangzhu.teachingcloudplatform.activity;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.baidu.location.BDLocation;
@@ -18,15 +20,29 @@ import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.map.MyLocationConfiguration;
 import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.model.LatLng;
+import com.jaredrummler.materialspinner.MaterialSpinner;
+import com.loopj.android.http.JsonHttpResponseHandler;
 import com.scnu.bangzhu.teachingcloudplatform.MyApplication;
 import com.scnu.bangzhu.teachingcloudplatform.R;
+import com.scnu.bangzhu.teachingcloudplatform.model.Course;
+import com.scnu.bangzhu.teachingcloudplatform.util.AsyncHttpUtil;
+import com.scnu.bangzhu.teachingcloudplatform.util.JSonUtil;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import cz.msebera.android.httpclient.Header;
 
 /**
  * Created by bangzhu on 2016/7/28.
  */
 public class TeacherSignActivity extends Activity implements View.OnClickListener{
+    //百度地图相关
     private MapView mMapView;
-    private Button mUseCurLoc;
     private BaiduMap mBaiduMap = null;
     private LocationClient mLocationClient;
     private MyLocationListener myLocationListener;
@@ -35,20 +51,41 @@ public class TeacherSignActivity extends Activity implements View.OnClickListene
     private double mLongitude;
     private double mLatitude;
     private boolean isFirstLoc = true;
+    //弹出对话框相关
+    private AlertDialog mAlert;
+    private AlertDialog.Builder mBuilder;
+    private View mCustomView;
+    private EditText mSignCourse, mSignClass;
+    private MaterialSpinner mCourseChioce, mClassChioce, mWeekChioce;
+    private List<String> mCourseList, mClassList, mWeekList;
+    private Button mStartSign;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_teacher_sign);
         initView();
+        bindView();
         initLocation();
         setListener();
     }
 
     private void initView() {
-        mUseCurLoc = (Button) findViewById(R.id.btn_useCurLoc);
         mMapView = (MapView) findViewById(R.id.bmap_teacher_sign);
         mBaiduMap = mMapView.getMap();
+
+        mSignCourse = (EditText) findViewById(R.id.et_sign_course);
+        mSignClass = (EditText) findViewById(R.id.et_sign_class);
+
+        mStartSign = (Button) findViewById(R.id.btn_startSign);
+    }
+
+    private void bindView(){
+
+        mCourseList = new ArrayList<>();
+        mClassList = new ArrayList<>();
+        mWeekList = new ArrayList<>();
+
     }
 
     private void initLocation() {
@@ -73,14 +110,21 @@ public class TeacherSignActivity extends Activity implements View.OnClickListene
     }
 
     private void setListener(){
-        mUseCurLoc.setOnClickListener(this);
+        mStartSign.setOnClickListener(this);
+        mSignCourse.setOnClickListener(this);
+        mSignClass.setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
         switch(v.getId()){
-            case R.id.btn_useCurLoc:
+            case R.id.btn_startSign:
                 Toast.makeText(TeacherSignActivity.this, mLongitude+":"+mLatitude, Toast.LENGTH_LONG).show();
+                break;
+            case R.id.et_sign_course:
+            case R.id.et_sign_class:
+                showChooseDialog();
+                //loadCourseAndClass();
                 break;
         }
     }
@@ -113,6 +157,60 @@ public class TeacherSignActivity extends Activity implements View.OnClickListene
                 isFirstLoc = false;
             }
         }
+    }
+
+    private void loadCourseAndClass(){
+        AsyncHttpUtil.get("getAllCourse", null, new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                JSONObject msg = response.optJSONObject("msg");
+                JSONArray course = msg.optJSONArray("course");
+                //List<Course> courseList = JSonUtil.getJsonList(course.toString(), Course.class);
+                for(int i=0;i<course.length();i++){
+                    try {
+                        JSONObject obj  = (JSONObject) course.get(i);
+                        mCourseList.add(obj.getString("courseName"));
+                        mClassList.add(obj.getString("className"));
+                        mWeekList.add(obj.getInt("courseWeekday")+"");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+//                for(Course c : courseList){
+//                    mCourseList.add(c.getCourseName());
+//                    mClassList.add(c.getClassName());
+//                    mWeekList.add(c.getCourseWeekday()+"");
+//                }
+                mCourseChioce.setItems(mCourseList);
+                mClassChioce.setItems(mClassList);
+                mWeekChioce.setItems(mWeekList);
+            }
+        });
+    }
+
+    private void showChooseDialog(){
+        mBuilder = new AlertDialog.Builder(this);
+        mCustomView = getLayoutInflater().inflate(R.layout.dialog_layout, null, false);
+        mCourseChioce = (MaterialSpinner) mCustomView.findViewById(R.id.s_course);
+        mClassChioce = (MaterialSpinner) mCustomView.findViewById(R.id.s_class);
+        mWeekChioce = (MaterialSpinner) mCustomView.findViewById(R.id.s_week);
+        loadCourseAndClass();
+        mBuilder.setView(mCustomView);
+        mBuilder.setCancelable(true);
+        mBuilder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        mBuilder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        mAlert = mBuilder.create();
+        mAlert.show();
     }
 
     @Override

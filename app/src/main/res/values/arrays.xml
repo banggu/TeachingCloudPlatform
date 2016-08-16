@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="signTime">
+        <item>今天</item>
+        <item>本周</item>
+        <item>本月</item>
+    </string-array>
+    <string-array name="signCondition">
+        <item>已签</item>
+        <item>未签</item>
+        <item>全部</item>
+    </string-array>
+</resources>

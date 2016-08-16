@@ -14,13 +14,59 @@
         android:layout_weight="1"
         android:gravity="center"
         android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="考勤课程"
+                android:textSize="20sp"
+                android:layout_marginRight="40dp"/>
+            <EditText
+                android:id="@+id/et_sign_course"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="考勤课程"
+                android:editable="false"
+                android:textSize="16sp"
+                android:padding="10dp"
+                android:background="@drawable/border_bg"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp">
+            <TextView
+                android:id="@+id/tv_class_tip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="考勤班级"
+                android:textSize="20sp"
+                android:layout_marginRight="40dp"/>
+            <EditText
+                android:id="@+id/et_sign_class"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="考勤班级"
+                android:editable="false"
+                android:textSize="16sp"
+                android:padding="10dp"
+                android:layout_toRightOf="@id/tv_class_tip"
+                android:layout_below="@id/et_sign_course"
+                android:background="@drawable/border_bg"/>
+        </LinearLayout>
+
         <Button
-            android:id="@+id/btn_useCurLoc"
+            android:id="@+id/btn_startSign"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/user_current_location"
             android:textSize="16sp"
-            android:background="@color/primary_red"
-            android:textColor="#fff"/>
+            android:background="@drawable/btn_primary_blue_bg"
+            android:textColor="#fff"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"/>
     </LinearLayout>
 </LinearLayout>

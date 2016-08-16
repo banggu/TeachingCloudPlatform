@@ -4,76 +4,73 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.Spinner;
 
+import com.jaredrummler.materialspinner.MaterialSpinner;
+import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.loopj.android.http.JsonHttpResponseHandler;
 import com.scnu.bangzhu.qrcodelibrary.activity.CaptureActivity;
 import com.scnu.bangzhu.teachingcloudplatform.R;
 import com.scnu.bangzhu.teachingcloudplatform.adapter.SignManagementAdapter;
+import com.scnu.bangzhu.teachingcloudplatform.model.Course;
 import com.scnu.bangzhu.teachingcloudplatform.model.Sign;
+import com.scnu.bangzhu.teachingcloudplatform.model.StudentSign;
+import com.scnu.bangzhu.teachingcloudplatform.util.AsyncHttpUtil;
+import com.scnu.bangzhu.teachingcloudplatform.util.JSonUtil;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import cz.msebera.android.httpclient.Header;
 
-public class StudentSignActivity extends Activity implements View.OnClickListener,AdapterView.OnItemSelectedListener, SwipeRefreshLayout.OnRefreshListener{
+
+public class StudentSignActivity extends Activity implements View.OnClickListener,MaterialSpinner.OnItemSelectedListener, SwipeRefreshLayout.OnRefreshListener{
     private ImageView iv_locationSign, iv_codeSign, iv_startSign;
     private ListView lv_signRecord;
-    private Spinner s_signTime, s_signCourse, s_signCondition;
+    //联动下拉框
+    private MaterialSpinner s_signTime, s_signCourse, s_signCondition;
+    private List<String> signTimeList, signCourseList, signConditionList;
+
     private SwipeRefreshLayout swipeRefreshLayout;
-    private ArrayAdapter signTimeAdapter, signNameAdapter, signConditionAdapter;
     private SignManagementAdapter signManagementAdapter;
-    private List<String> signTimesList, signCourseList, signConditionList;
-    private List<Sign> signList;
-    private String[] names = {"赵永远", "陆安然", "井柏然"};
-    private String[] times = {"9:30", "10:30", "11:15"};
-    private int[] signImg = {0,0,1};
-    private String[] signTimes = {"本月", "本周", "今天"};
-    private String[] signCourse = {"信息安全原理", "编译原理", "JavaEE"};
-    private String[] signCondition = {"全部", "已签", "未签"};
+    private List<StudentSign> signList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_student_sign);
         initView();
+        bindView();
         setContents();
         setListeners();
     }
 
     private void initView() {
-
         iv_locationSign  = (ImageView) findViewById(R.id.iv_locationSign);
         iv_codeSign = (ImageView) findViewById(R.id.iv_codeSign);
         iv_startSign = (ImageView) findViewById(R.id.iv_startSign);
         lv_signRecord = (ListView) findViewById(R.id.lv_signRecord);
-        s_signTime = (Spinner) findViewById(R.id.s_signTime);
-        s_signCourse = (Spinner) findViewById(R.id.s_signCourse);
-        s_signCondition = (Spinner) findViewById(R.id.s_signCondition);
+        s_signTime = (MaterialSpinner) findViewById(R.id.s_signTime);
+        s_signCourse = (MaterialSpinner) findViewById(R.id.s_signCourse);
+        s_signCondition = (MaterialSpinner) findViewById(R.id.s_signCondition);
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeLayout);
-
-        signList = new ArrayList<>();
-        signTimesList = new ArrayList<>();
-        signCourseList = new ArrayList<>();
-        signConditionList = new ArrayList<>();
-
-        signManagementAdapter = new SignManagementAdapter(this,signList);
-        signTimeAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, signTimesList);
-        signNameAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, signCourseList);
-        signConditionAdapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1, signConditionList);
-
     }
 
-    private void setContents() {
+    private void bindView(){
+        signList = new ArrayList<>();
+        signTimeList = new ArrayList<String>();
+        signCourseList = new ArrayList<String>();
+        signConditionList = new ArrayList<String>();
+        signManagementAdapter = new SignManagementAdapter(this,signList);
         lv_signRecord.setAdapter(signManagementAdapter);
-        s_signTime.setAdapter(signTimeAdapter);
-        s_signCourse.setAdapter(signNameAdapter);
-        s_signCondition.setAdapter(signConditionAdapter);
 
         // 第一次进入页面的时候显示加载进度条
         swipeRefreshLayout.setProgressViewOffset(false, 0, (int) TypedValue
@@ -83,23 +80,19 @@ public class StudentSignActivity extends Activity implements View.OnClickListene
         swipeRefreshLayout.setSize(SwipeRefreshLayout.LARGE);
         swipeRefreshLayout.setProgressBackgroundColorSchemeResource(R.color.swipe_bg_color);
         swipeRefreshLayout.setProgressViewEndTarget(true, 200);
+    }
 
-        //设置临时数据
-        for(int i=0;i<names.length;i++){
-            Sign s = new Sign();
-            s.signCondition = signImg[i];
-            s.courseName = names[i];
-            s.signTime = times[i];
-            signList.add(s);
-
-            signTimesList.add(signTimes[i]);
-            signCourseList.add(signCourse[i]);
-            signConditionList.add(signCondition[i]);
+    private void setContents() {
+        String[] strSignTimeList = getResources().getStringArray(R.array.signTime);
+        String[] strSignConditionList = getResources().getStringArray(R.array.signCondition);
+        for(int i=0;i<strSignConditionList.length;i++){
+            signTimeList.add(strSignTimeList[i]);
+            signConditionList.add(strSignConditionList[i]);
         }
-        signManagementAdapter.notifyDataSetChanged();
-        signTimeAdapter.notifyDataSetChanged();
-        signNameAdapter.notifyDataSetChanged();
-        signConditionAdapter.notifyDataSetChanged();
+        s_signTime.setItems(signTimeList);
+        s_signCondition.setItems(signConditionList);
+        getAllCourse();
+        getAllStudentSign();
     }
 
     private void setListeners() {
@@ -139,28 +132,61 @@ public class StudentSignActivity extends Activity implements View.OnClickListene
         }
     }
 
-
-    @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        switch(view.getId()){
-            case R.id.s_signTime:
-                break;
-            case R.id.s_signCourse:
-                break;
-            case R.id.s_signCondition:
-                break;
-        }
-    }
-
-    @Override
-    public void onNothingSelected(AdapterView<?> parent) {
-
-    }
-
     @Override
     public void onRefresh() {
         //请求数据，刷新列表
 
         swipeRefreshLayout.setRefreshing(false);
+    }
+
+    @Override
+    public void onItemSelected(MaterialSpinner view, int position, long id, Object item) {
+
+    }
+
+    /**
+     *  工具方法
+     */
+    private void getAllCourse(){
+        AsyncHttpUtil.get("getAllCourse", null,
+                new JsonHttpResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                        try {
+                            JSONObject msg = response.optJSONObject("msg");
+                            JSONArray jsonArray = msg.optJSONArray("course");
+                            Log.i("HZWING", "course list is "+jsonArray.toString()+"===============");
+                            for(int i=0;i<jsonArray.length();i++){
+                                JSONObject obj = (JSONObject) jsonArray.get(i);
+                                signCourseList.add(obj.getString("courseName"));
+                            }
+//                            List<Course> courseList = JSonUtil.getJsonList(jsonArray.toString(), Course.class);
+//                            for (Course course : courseList) {
+//                                signCourseList.add(course.getCourseName());
+//                            }
+                            s_signCourse.setItems(signCourseList);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+    }
+
+    private void getAllStudentSign(){
+        AsyncHttpUtil.get("getAllStudentSign", null,
+                new JsonHttpResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                        try {
+                            JSONObject msg = response.optJSONObject("msg");
+                            JSONArray jsonArray = msg.optJSONArray("studentSign");
+                            List<StudentSign> studentSignList = JSonUtil.getJsonList(jsonArray.toString(), StudentSign.class);
+                            signList.addAll(studentSignList);
+                            signManagementAdapter.notifyDataSetChanged();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
     }
 }

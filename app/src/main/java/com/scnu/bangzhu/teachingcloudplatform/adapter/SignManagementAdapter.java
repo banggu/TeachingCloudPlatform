@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import com.scnu.bangzhu.teachingcloudplatform.R;
 import com.scnu.bangzhu.teachingcloudplatform.model.Sign;
+import com.scnu.bangzhu.teachingcloudplatform.model.StudentSign;
 
 import java.util.List;
 
@@ -20,9 +21,9 @@ import java.util.List;
  */
 public class SignManagementAdapter extends BaseAdapter{
     private Context mContext;
-    private List<Sign> mSignList;
+    private List<StudentSign> mSignList;
     
-    public SignManagementAdapter(Context context, List<Sign> signList){
+    public SignManagementAdapter(Context context, List<StudentSign> signList){
         mContext = context;
         mSignList = signList;
     }
@@ -46,7 +47,7 @@ public class SignManagementAdapter extends BaseAdapter{
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         ViewHolder viewHolder = null;
-        Sign sign = mSignList.get(position);
+        StudentSign sign = mSignList.get(position);
         if(convertView == null){
             viewHolder = new ViewHolder();
             convertView = LayoutInflater.from(mContext).inflate(R.layout.sign_item, null);
@@ -58,18 +59,18 @@ public class SignManagementAdapter extends BaseAdapter{
         }else{
             viewHolder = (ViewHolder) convertView.getTag();
         }
-        if(sign.signCondition == 0){
+        if(sign.getIsSigned() == 0){
             viewHolder.signCondition.setText("缺勤");
             viewHolder.signCondition.setBackground(mContext.getResources().getDrawable(R.drawable.sign_absence));
         }else {
-            if (sign.signCondition == 1) {
+            if (sign.getIsSigned() == 1) {
                 viewHolder.signCondition.setText("已签");
 //            viewHolder.signCondition.setBackgroundColor(R.color.success_green);
                 viewHolder.signCondition.setBackground(mContext.getResources().getDrawable(R.drawable.sign_attendance));
             }
         }
-        viewHolder.signStuName.setText(sign.courseName);
-        viewHolder.signTime.setText(sign.signTime);
+        viewHolder.signStuName.setText(sign.getName());
+        viewHolder.signTime.setText(sign.getSignTime());
         return convertView;
     }
 
