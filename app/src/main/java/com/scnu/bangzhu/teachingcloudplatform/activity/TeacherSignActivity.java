@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.aigestudio.wheelpicker.WheelPicker;
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
@@ -22,6 +23,7 @@ import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.model.LatLng;
 import com.jaredrummler.materialspinner.MaterialSpinner;
 import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
 import com.scnu.bangzhu.teachingcloudplatform.MyApplication;
 import com.scnu.bangzhu.teachingcloudplatform.R;
 import com.scnu.bangzhu.teachingcloudplatform.model.Course;
@@ -56,7 +58,7 @@ public class TeacherSignActivity extends Activity implements View.OnClickListene
     private AlertDialog.Builder mBuilder;
     private View mCustomView;
     private EditText mSignCourse, mSignClass;
-    private MaterialSpinner mCourseChioce, mClassChioce, mWeekChioce;
+    private WheelPicker mCourseChioce, mClassChioce, mWeekChioce;
     private List<String> mCourseList, mClassList, mWeekList;
     private Button mStartSign;
 
@@ -120,11 +122,11 @@ public class TeacherSignActivity extends Activity implements View.OnClickListene
         switch(v.getId()){
             case R.id.btn_startSign:
                 Toast.makeText(TeacherSignActivity.this, mLongitude+":"+mLatitude, Toast.LENGTH_LONG).show();
+//                teacherStartSign();
                 break;
             case R.id.et_sign_course:
             case R.id.et_sign_class:
                 showChooseDialog();
-                //loadCourseAndClass();
                 break;
         }
     }
@@ -176,41 +178,81 @@ public class TeacherSignActivity extends Activity implements View.OnClickListene
                         e.printStackTrace();
                     }
                 }
-//                for(Course c : courseList){
-//                    mCourseList.add(c.getCourseName());
-//                    mClassList.add(c.getClassName());
-//                    mWeekList.add(c.getCourseWeekday()+"");
-//                }
-                mCourseChioce.setItems(mCourseList);
-                mClassChioce.setItems(mClassList);
-                mWeekChioce.setItems(mWeekList);
+                mCourseChioce.setData(mCourseList);
+                mClassChioce.setData(mClassList);
+                mWeekChioce.setData(mWeekList);
             }
         });
     }
 
+    //打开滚轮选择器对话框
     private void showChooseDialog(){
         mBuilder = new AlertDialog.Builder(this);
         mCustomView = getLayoutInflater().inflate(R.layout.dialog_layout, null, false);
-        mCourseChioce = (MaterialSpinner) mCustomView.findViewById(R.id.s_course);
-        mClassChioce = (MaterialSpinner) mCustomView.findViewById(R.id.s_class);
-        mWeekChioce = (MaterialSpinner) mCustomView.findViewById(R.id.s_week);
+        mCourseChioce = (WheelPicker) mCustomView.findViewById(R.id.wp_course);
+        mClassChioce = (WheelPicker) mCustomView.findViewById(R.id.wp_class);
+        mWeekChioce = (WheelPicker) mCustomView.findViewById(R.id.wp_week);
+        //设置滚轮选择器样式
+        setWheelStyle();
         loadCourseAndClass();
         mBuilder.setView(mCustomView);
         mBuilder.setCancelable(true);
         mBuilder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-
+                int coursePosition = mCourseChioce.getCurrentItemPosition();
+                int classPosition = mClassChioce.getCurrentItemPosition();
+                mSignCourse.setText(mCourseList.get(coursePosition));
+                mSignClass.setText(mClassList.get(classPosition));
             }
         });
         mBuilder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-
+                mAlert.dismiss();
             }
         });
         mAlert = mBuilder.create();
         mAlert.show();
+    }
+
+    //设置滚轮选择器样式
+    private void setWheelStyle(){
+        mCourseChioce.setCyclic(true);
+        mCourseChioce.setIndicator(true);
+        mCourseChioce.setIndicatorColor(R.color.indecator_color);
+        mCourseChioce.setItemTextSize((int) getResources().getDimension(R.dimen.wheel_size));
+        mCourseChioce.setCurtain(true);
+        mCourseChioce.setCurtainColor(R.color.curtain_color);
+        mCourseChioce.setAtmospheric(true);
+
+        mClassChioce.setCyclic(true);
+        mClassChioce.setIndicator(true);
+        mClassChioce.setIndicatorColor(R.color.indecator_color);
+        mClassChioce.setItemTextSize((int) getResources().getDimension(R.dimen.wheel_size));
+        mClassChioce.setCurtain(true);
+        mClassChioce.setCurtainColor(R.color.curtain_color);
+        mClassChioce.setAtmospheric(true);
+
+        mWeekChioce.setCyclic(true);
+        mWeekChioce.setIndicator(true);
+        mWeekChioce.setIndicatorColor(R.color.indecator_color);
+        mWeekChioce.setItemTextSize((int) getResources().getDimension(R.dimen.wheel_size));
+        mWeekChioce.setCurtain(true);
+        mWeekChioce.setCurtainColor(R.color.curtain_color);
+        mWeekChioce.setAtmospheric(true);
+    }
+
+    //教师发起考勤
+    private void teacherStartSign(){
+        String url = "";
+        RequestParams params = new RequestParams();
+        AsyncHttpUtil.post(url, params, new JsonHttpResponseHandler(){
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+
+            }
+        });
     }
 
     @Override

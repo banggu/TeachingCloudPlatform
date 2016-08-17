@@ -7,41 +7,23 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
-        <com.jaredrummler.materialspinner.MaterialSpinner
-            android:id="@+id/s_course"
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:layout_weight="2"
-            ms_dropdown_height="@dimen/spinner_dropdown_height"
-            ms_dropdown_max_height="@dimen/spinner_dropdown_max_height"/>
+        <com.aigestudio.wheelpicker.WheelPicker
+            android:id="@+id/wp_course"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"/>
 
-        <ImageView
-            android:layout_width="1dp"
-            android:layout_height="30dp"
-            android:layout_gravity="center_vertical"
-            android:src="@color/primary_black" />
+        <com.aigestudio.wheelpicker.WheelPicker
+            android:id="@+id/wp_class"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"/>
 
-        <com.jaredrummler.materialspinner.MaterialSpinner
-            android:id="@+id/s_class"
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:layout_weight="3"
-            ms_dropdown_height="@dimen/spinner_dropdown_height"
-            ms_dropdown_max_height="@dimen/spinner_dropdown_max_height"/>
-
-        <ImageView
-            android:layout_width="1dp"
-            android:layout_height="30dp"
-            android:layout_gravity="center_vertical"
-            android:src="@color/primary_black" />
-
-        <com.jaredrummler.materialspinner.MaterialSpinner
-            android:id="@+id/s_week"
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:layout_weight="2"
-            ms_dropdown_height="@dimen/spinner_dropdown_height"
-            ms_dropdown_max_height="@dimen/spinner_dropdown_max_height"/>
+        <com.aigestudio.wheelpicker.WheelPicker
+            android:id="@+id/wp_week"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
