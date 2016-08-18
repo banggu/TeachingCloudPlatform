@@ -10,5 +10,9 @@
     <string name="delete_sign">删除</string>
     <string name="attendance">出勤</string>
     <string name="absence">缺勤</string>
-    <string name="user_current_location">使用当前位置</string>
+    <string name="user_current_location">发起考勤</string>
+    <string name="network_error">网络连接失败！</string>
+    <string name="wait_for_sign">待考勤课程</string>
+    <string name="empty">无签到课程</string>
+    <string name="over_range">超出范围，无法签到！</string>
 </resources>

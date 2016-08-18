@@ -1,137 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-
-    <include layout="@layout/header" />
+    android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="4"
+        android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <LinearLayout
+        <com.baidu.mapapi.map.MapView
+            android:id="@+id/bmapView"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_weight="3"
+            android:clickable="true" />
+
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingTop="10dp">
+            android:layout_height="0dp"
+            android:layout_weight="2">
 
-            <LinearLayout
-                android:layout_width="0dp"
+            <RelativeLayout
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:id="@+id/iv_codeSign"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:paddingBottom="5dp"
-                    android:src="@drawable/rq_code_icon" />
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="60dp">
 
                 <TextView
-                    android:id="@+id/tv_codeSign"
+                    android:id="@+id/tv_wait_for_sign"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="扫码考勤"
-                    android:textSize="20sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:id="@+id/iv_locationSign"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:src="@drawable/location_icon" />
+                    android:layout_alignParentLeft="true"
+                    android:layout_marginRight="50dp"
+                    android:text="@string/wait_for_sign"
+                    android:textSize="24sp" />
 
                 <TextView
-                    android:id="@+id/tv_locationSign"
+                    android:id="@+id/tv_sign_course"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="位置考勤"
-                    android:textSize="20sp" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
+                    android:layout_toRightOf="@+id/tv_wait_for_sign"
+                    android:text="@string/wait_for_sign"
+                    android:textSize="24sp" />
+            </RelativeLayout>
 
-                <ImageView
-                    android:id="@+id/iv_startSign"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:src="@drawable/start_sign"/>
-
-                <TextView
-                    android:id="@+id/tv_startSign"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="位置考勤"
-                    android:textSize="20sp" />
-            </LinearLayout>
-        </LinearLayout>
+            <Button
+                android:id="@+id/btn_startSign"
+                android:layout_width="90dp"
+                android:layout_height="90dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:background="@drawable/btn_circle"
+                android:text="签到"
+                android:textColor="#fff"
+                android:textSize="20sp" />
+        </RelativeLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/ll_network_err"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
 
         <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:layout_marginTop="5dp"
-            android:background="#e7e7e7" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="10dp">
-            <com.jaredrummler.materialspinner.MaterialSpinner
-                android:id="@+id/s_signTime"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_weight="2"/>
-            <ImageView
-                android:layout_width="1dp"
-                android:layout_height="30dp"
-                android:src="@color/primary_black"
-                android:layout_gravity="center_vertical"/>
-            <com.jaredrummler.materialspinner.MaterialSpinner
-                android:id="@+id/s_signCourse"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_weight="3"/>
-            <ImageView
-                android:layout_width="1dp"
-                android:layout_height="30dp"
-                android:src="@color/primary_black"
-                android:layout_gravity="center_vertical"/>
-            <com.jaredrummler.materialspinner.MaterialSpinner
-                android:id="@+id/s_signCondition"
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:layout_weight="2"/>
-        </LinearLayout>
+            android:src="@drawable/network_error" />
 
-        <android.support.v4.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/swipeLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="5dp">
-
-            <ListView
-                android:id="@+id/lv_signRecord"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:scrollbars="none" />
-        </android.support.v4.widget.SwipeRefreshLayout>
+        <TextView
+            android:id="@+id/tv_error_tip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/network_error"
+            android:textSize="20sp" />
     </LinearLayout>
-</LinearLayout>
+</FrameLayout>

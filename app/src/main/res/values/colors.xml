@@ -2,6 +2,7 @@
 <resources>
     <color name="primary_blue">#10A0EA</color>
     <color name="warning_red">#F37B1D</color>
+    <color name="white">#ffffff</color>
     <color name="success_green">#5EB95E</color>
     <color name="swipe_scheme_color">#0F88EB</color>
     <color name="swipe_bg_color">#F7FAFC</color>
@@ -10,4 +11,5 @@
     <color name="primary_black">#6A6A6A</color>
     <color name="indecator_color">#0C6BB0</color>
     <color name="curtain_color">#3894FF</color>
+
 </resources>

@@ -24,10 +24,11 @@ dependencies {
     compile 'com.android.support:appcompat-v7:24.0.0-alpha1'
     compile project(':qrcodelibrary')
     compile files('libs/volley.jar')
-    compile files('libs/BaiduLBS_Android.jar')
     compile files('libs/android-async-http-1.4.9.jar')
     compile files('libs/gson-2.2.4.jar')
     compile 'cz.msebera.android:httpclient:4.3.6'
     compile 'com.jaredrummler:material-spinner:1.1.0'
     compile 'cn.aigestudio.wheelpicker:WheelPicker:1.1.1'
+    compile files('libs/BaiduLBS_Android.jar')
+    compile 'com.google.android.gms:play-services-appindexing:8.1.0'
 }

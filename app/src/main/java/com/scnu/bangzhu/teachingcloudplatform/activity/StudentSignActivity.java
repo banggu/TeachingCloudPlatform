@@ -1,192 +1,278 @@
 package com.scnu.bangzhu.teachingcloudplatform.activity;
 
 import android.app.Activity;
-import android.content.Intent;
+import android.graphics.Point;
 import android.os.Bundle;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
-import android.util.TypedValue;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageView;
-import android.widget.ListView;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
-import com.jaredrummler.materialspinner.MaterialSpinner;
-import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.baidu.location.BDLocation;
+import com.baidu.location.BDLocationListener;
+import com.baidu.location.BDNotifyListener;
+import com.baidu.location.LocationClient;
+import com.baidu.location.LocationClientOption;
+import com.baidu.mapapi.map.BaiduMap;
+import com.baidu.mapapi.map.BitmapDescriptor;
+import com.baidu.mapapi.map.BitmapDescriptorFactory;
+import com.baidu.mapapi.map.InfoWindow;
+import com.baidu.mapapi.map.MapStatusUpdate;
+import com.baidu.mapapi.map.MapStatusUpdateFactory;
+import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.map.Marker;
+import com.baidu.mapapi.map.MarkerOptions;
+import com.baidu.mapapi.map.MyLocationConfiguration;
+import com.baidu.mapapi.map.MyLocationData;
+import com.baidu.mapapi.map.OverlayOptions;
+import com.baidu.mapapi.model.LatLng;
 import com.loopj.android.http.JsonHttpResponseHandler;
-import com.scnu.bangzhu.qrcodelibrary.activity.CaptureActivity;
+import com.loopj.android.http.RequestParams;
+import com.scnu.bangzhu.teachingcloudplatform.MyApplication;
 import com.scnu.bangzhu.teachingcloudplatform.R;
-import com.scnu.bangzhu.teachingcloudplatform.adapter.SignManagementAdapter;
-import com.scnu.bangzhu.teachingcloudplatform.model.Course;
-import com.scnu.bangzhu.teachingcloudplatform.model.Sign;
-import com.scnu.bangzhu.teachingcloudplatform.model.StudentSign;
+import com.scnu.bangzhu.teachingcloudplatform.listener.MyOrientationListener;
 import com.scnu.bangzhu.teachingcloudplatform.util.AsyncHttpUtil;
-import com.scnu.bangzhu.teachingcloudplatform.util.JSonUtil;
+import com.scnu.bangzhu.teachingcloudplatform.util.DistanceUtil;
+import com.scnu.bangzhu.teachingcloudplatform.util.NetWorkUtil;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
 
-
-public class StudentSignActivity extends Activity implements View.OnClickListener,MaterialSpinner.OnItemSelectedListener, SwipeRefreshLayout.OnRefreshListener{
-    private ImageView iv_locationSign, iv_codeSign, iv_startSign;
-    private ListView lv_signRecord;
-    //联动下拉框
-    private MaterialSpinner s_signTime, s_signCourse, s_signCondition;
-    private List<String> signTimeList, signCourseList, signConditionList;
-
-    private SwipeRefreshLayout swipeRefreshLayout;
-    private SignManagementAdapter signManagementAdapter;
-    private List<StudentSign> signList;
+/**
+ * Created by bangzhu on 2016/6/12.
+ */
+public class StudentSignActivity extends Activity implements View.OnClickListener{
+    //地图相关
+    private MapView mMapView = null;
+    private BaiduMap mBaiduMap = null;
+    private LocationClient mLocationClient;
+    private MyLocationListener myLocationListener;
+    private NotifyLister mNotifyer;
+    private boolean isFirstLoc = true;
+    private double mLongitude;
+    private double mLatitude;
+    //其他视图
+    private Button mstartSign;
+    private LinearLayout mNetworkError;
+    private TextView mSignCourse, mErrorTip;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_student_sign);
         initView();
-        bindView();
-        setContents();
-        setListeners();
+        initLocation();
+        setListener();
+//        setContent();
     }
 
     private void initView() {
-        iv_locationSign  = (ImageView) findViewById(R.id.iv_locationSign);
-        iv_codeSign = (ImageView) findViewById(R.id.iv_codeSign);
-        iv_startSign = (ImageView) findViewById(R.id.iv_startSign);
-        lv_signRecord = (ListView) findViewById(R.id.lv_signRecord);
-        s_signTime = (MaterialSpinner) findViewById(R.id.s_signTime);
-        s_signCourse = (MaterialSpinner) findViewById(R.id.s_signCourse);
-        s_signCondition = (MaterialSpinner) findViewById(R.id.s_signCondition);
-        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeLayout);
+        mMapView = (MapView) findViewById(R.id.bmapView);
+        mBaiduMap = mMapView.getMap();
+        mstartSign = (Button) findViewById(R.id.btn_startSign);
+        mNetworkError = (LinearLayout) findViewById(R.id.ll_network_err);
+        mErrorTip = (TextView) findViewById(R.id.tv_error_tip);
     }
 
-    private void bindView(){
-        signList = new ArrayList<>();
-        signTimeList = new ArrayList<String>();
-        signCourseList = new ArrayList<String>();
-        signConditionList = new ArrayList<String>();
-        signManagementAdapter = new SignManagementAdapter(this,signList);
-        lv_signRecord.setAdapter(signManagementAdapter);
+    private void initLocation() {
+        //初始化地图核心类
+        mLocationClient = ((MyApplication)getApplication()).getBdLocationClient();
+        //初始化监听接口
+        myLocationListener = new MyLocationListener();
+        mNotifyer = new NotifyLister();
+        mLocationClient.registerLocationListener(myLocationListener);
+        mNotifyer.SetNotifyLocation(23.1467,113.3537,30,"bd09ll");
+        mLocationClient.registerNotify(mNotifyer);
+        //设置地图参数
+        LocationClientOption option = new LocationClientOption();
+        //设置坐标系
+        option.setCoorType("bd09ll");
+        option.setIsNeedAddress(true);
+        //设置定位模式
+        option.setLocationMode(LocationClientOption.LocationMode.Hight_Accuracy);
+        //设置是否打开gps
+        option.setOpenGps(true);
+        //设置刷新间隔
+        option.setScanSpan(3000);
+        mLocationClient.setLocOption(option);
 
-        // 第一次进入页面的时候显示加载进度条
-        swipeRefreshLayout.setProgressViewOffset(false, 0, (int) TypedValue
-                .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources()
-                        .getDisplayMetrics()));
-        swipeRefreshLayout.setColorSchemeResources(R.color.swipe_scheme_color);
-        swipeRefreshLayout.setSize(SwipeRefreshLayout.LARGE);
-        swipeRefreshLayout.setProgressBackgroundColorSchemeResource(R.color.swipe_bg_color);
-        swipeRefreshLayout.setProgressViewEndTarget(true, 200);
     }
 
-    private void setContents() {
-        String[] strSignTimeList = getResources().getStringArray(R.array.signTime);
-        String[] strSignConditionList = getResources().getStringArray(R.array.signCondition);
-        for(int i=0;i<strSignConditionList.length;i++){
-            signTimeList.add(strSignTimeList[i]);
-            signConditionList.add(strSignConditionList[i]);
-        }
-        s_signTime.setItems(signTimeList);
-        s_signCondition.setItems(signConditionList);
-        getAllCourse();
-        getAllStudentSign();
+    private void setListener() {
+        mstartSign.setOnClickListener(this);
+        //设置地图加载完成监听
+        mBaiduMap.setOnMapLoadedCallback(new BaiduMap.OnMapLoadedCallback() {
+            @Override
+            public void onMapLoaded() {
+                if (NetWorkUtil.getInstance(StudentSignActivity.this).isNetWorkConnected()) {
+                    mNetworkError.setVisibility(View.GONE);
+                } else {
+                    mNetworkError.setVisibility(View.VISIBLE);
+                    mErrorTip.setText(getResources().getText(R.string.network_error));
+                }
+            }
+        });
     }
 
-    private void setListeners() {
-        swipeRefreshLayout.setOnRefreshListener(this);
-        iv_locationSign.setOnClickListener(this);
-        iv_codeSign.setOnClickListener(this);
-        iv_startSign.setOnClickListener(this);
+    //请求并获取可签到的课程信息
+    private void setContent(){
+        String url = "";
+        RequestParams params = new RequestParams();
+        AsyncHttpUtil.get(url, params, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                //请求成功
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                //请求数据失败
+            }
+        });
     }
 
     @Override
     public void onClick(View v) {
         switch(v.getId()){
-            case R.id.iv_locationSign:
-                Intent intent = new Intent(StudentSignActivity.this, BaiduMapActivity.class);
-                startActivity(intent);
-                break;
-            case R.id.iv_codeSign:
-                Intent it = new Intent(StudentSignActivity.this, CaptureActivity.class);
-                startActivityForResult(it, 0);
-                break;
-            case R.id.iv_startSign:
-                Intent i = new Intent(StudentSignActivity.this, TeacherSignActivity.class);
-                startActivity(i);
+            case R.id.btn_startSign:
+                if(NetWorkUtil.getInstance(StudentSignActivity.this).isNetWorkConnected()){
+                    mNetworkError.setVisibility(View.GONE);
+                    double distance = DistanceUtil.getDistance(mLongitude, mLatitude, 114.13224, 22.60957);
+                    if(distance > 15){
+                        Log.i("HZWING", mLongitude+":"+mLatitude);
+                        mNetworkError.setVisibility(View.VISIBLE);
+                        mErrorTip.setText(getResources().getText(R.string.over_range));
+                        Toast.makeText(this, "超出范围，无法签到,"+"距离为："+distance+"米", Toast.LENGTH_LONG).show();
+                    }else{
+                        mNetworkError.setVisibility(View.GONE);
+                        Toast.makeText(this, "可以进行签到,"+"距离为："+distance+"米", Toast.LENGTH_LONG).show();
+//                        studentSign();
+                    }
+                }else{
+                    mNetworkError.setVisibility(View.VISIBLE);
+                    mErrorTip.setText(getResources().getText(R.string.network_error));
+                }
                 break;
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode == RESULT_OK){
-            Bundle bundle = data.getExtras();
-            String url = bundle.getString("result");
-            Intent intent = new Intent(StudentSignActivity.this, ShowZxingUrlActivity.class);
-            intent.putExtra("url", url);
-            startActivity(intent);
+    //学生签到
+    private void studentSign(){
+        String url = "";
+        RequestParams params = new RequestParams();
+        AsyncHttpUtil.get(url, params, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                //请求成功
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                //请求数据失败
+            }
+        });
+    }
+
+    //地图监听接口
+    class MyLocationListener implements BDLocationListener{
+
+        @Override
+        public void onReceiveLocation(BDLocation bdLocation) {
+            if(bdLocation == null){
+                return;
+            }
+            // 构造定位数据
+            MyLocationData locData = new MyLocationData.Builder()
+                    .accuracy(bdLocation.getRadius())
+                    .direction(100).latitude(bdLocation.getLatitude())
+                    .longitude(bdLocation.getLongitude()).build();
+            // 设置定位数据
+            mBaiduMap.setMyLocationData(locData);
+            //设置自定义图标
+//            MyLocationConfiguration config = new MyLocationConfiguration(mLocationMode,
+//                    true, mLocationIcon);
+//            mBaiduMap.setMyLocationConfigeration(config);
+            //更新经纬度
+            mLongitude = bdLocation.getLongitude();
+            mLatitude = bdLocation.getLatitude();
+
+            if(isFirstLoc){
+                //获取坐标点
+                LatLng ll = new LatLng(bdLocation.getLatitude(), bdLocation.getLongitude());
+                MapStatusUpdate mapUpdate = MapStatusUpdateFactory.newLatLngZoom(ll, 16);
+                mBaiduMap.animateMapStatus(mapUpdate);
+                isFirstLoc = false;
+            }
         }
     }
 
-    @Override
-    public void onRefresh() {
-        //请求数据，刷新列表
+    //地图提醒类，用于
+    class NotifyLister extends BDNotifyListener {
+        public void onNotify(BDLocation mlocation, float distance){
+            Toast.makeText(StudentSignActivity.this, "可以进行签到"+"距离为："+distance, Toast.LENGTH_LONG).show();
+        }
+    }
 
-        swipeRefreshLayout.setRefreshing(false);
+    private void addOverLays() {
+//        mBaiduMap.clear();
+//        LatLng latLng = null;
+//        Marker marker = null;
+//        OverlayOptions overlayOptions;
+//        latLng = new LatLng(mLatitude, mLongitude);
+//        //图标
+//        overlayOptions = new MarkerOptions().position(latLng).icon(mLocationIcon).zIndex(5);
+//        mBaiduMap.addOverlay(overlayOptions);
+//
+//        //更新位置
+//        MapStatusUpdate msu = MapStatusUpdateFactory.newLatLngZoom(latLng, 16);
+//        mBaiduMap.setMapStatus(msu);
+
+    }
+
+    //返回当前位置
+    public void returnToCurrentLocation(){
+        LatLng ll = new LatLng(mLatitude, mLongitude);
+        MapStatusUpdate mapUpdate = MapStatusUpdateFactory.newLatLngZoom(ll, 16);
+        mBaiduMap.animateMapStatus(mapUpdate);
     }
 
     @Override
-    public void onItemSelected(MaterialSpinner view, int position, long id, Object item) {
-
+    protected void onStart() {
+        super.onStart();
+        //开启定位图层
+        mBaiduMap.setMyLocationEnabled(true);
+        //开始定位
+        mLocationClient.start();
     }
 
-    /**
-     *  工具方法
-     */
-    private void getAllCourse(){
-        AsyncHttpUtil.get("getAllCourse", null,
-                new JsonHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                        try {
-                            JSONObject msg = response.optJSONObject("msg");
-                            JSONArray jsonArray = msg.optJSONArray("course");
-                            Log.i("HZWING", "course list is "+jsonArray.toString()+"===============");
-                            for(int i=0;i<jsonArray.length();i++){
-                                JSONObject obj = (JSONObject) jsonArray.get(i);
-                                signCourseList.add(obj.getString("courseName"));
-                            }
-//                            List<Course> courseList = JSonUtil.getJsonList(jsonArray.toString(), Course.class);
-//                            for (Course course : courseList) {
-//                                signCourseList.add(course.getCourseName());
-//                            }
-                            s_signCourse.setItems(signCourseList);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mMapView.onResume();
     }
 
-    private void getAllStudentSign(){
-        AsyncHttpUtil.get("getAllStudentSign", null,
-                new JsonHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                        try {
-                            JSONObject msg = response.optJSONObject("msg");
-                            JSONArray jsonArray = msg.optJSONArray("studentSign");
-                            List<StudentSign> studentSignList = JSonUtil.getJsonList(jsonArray.toString(), StudentSign.class);
-                            signList.addAll(studentSignList);
-                            signManagementAdapter.notifyDataSetChanged();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mMapView.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mBaiduMap.setMyLocationEnabled(false);
+        mLocationClient.stop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mMapView.onDestroy();
     }
 }
